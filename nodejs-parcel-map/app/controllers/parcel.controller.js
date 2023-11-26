@@ -10,10 +10,15 @@ exports.findByAddress = (req, res) => {
   }
   parcels = Parcel.findAll({
     where: {
-      site_addr: address.site_addr,
+      site_addr: {
+        [Op.like]: '%' + address.site_addr + '%'
+      },
       addr_num: address.addr_num,
-      city: address.city
-    }
+      city: {
+        [Op.like]: '%' + address.city + '%'
+      }
+    },
+    limit: 10
   }).then(parcels => {
     res.send({ parcels: parcels })
   })
