@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import ParcelDataService from '../services/parcel.service'
+import Map from './map.component.js'
 
 export default class GetParcel extends Component {
   constructor (props) {
@@ -13,8 +14,7 @@ export default class GetParcel extends Component {
       id: null,
       site_addr: '',
       addr_number: '',
-      city: '',
-      parcel: null
+      city: ''
     }
   }
 
@@ -36,7 +36,7 @@ export default class GetParcel extends Component {
     })
   }
 
-  getParcel () {
+  getParcel (e) {
     var address = {
       site_addr: this.state.site_addr,
       addr_num: this.state.addr_number,
@@ -45,10 +45,27 @@ export default class GetParcel extends Component {
 
     ParcelDataService.findByAddress(address)
       .then(response => {
-        this.setState({
-          parcel: response.data.parcel
-        })
-        console.log(response.data)
+        if (response.data.parcels.length == 0) {
+          // No parcels found
+          console.log('No parcels found')
+        } else if (response.data.parcels.length == 1) {
+          // One parcel match
+          this.setState(
+            {
+              parcel: response.data.parcels[0]
+            },
+            () => {
+              console.log(this.state.parcel)
+            }
+          )
+        } else {
+          // Multiple parcels match
+          // TODO (?) allow user to choose between matched parcels
+          this.setState({
+            parcel: response.data.parcels[0]
+          })
+          console.log(response.data.parcels.length + ' parcels found')
+        }
       })
       .catch(e => {
         console.log(e)
@@ -111,6 +128,9 @@ export default class GetParcel extends Component {
             </button>
           </div>
         )}
+        <div>
+          <Map></Map>
+        </div>
       </div>
     )
   }
