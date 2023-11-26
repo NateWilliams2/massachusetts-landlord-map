@@ -5,7 +5,7 @@ import pathlib
 
 ogr.UseExceptions()
 
-table_name = "sanitized"
+table_name = "parcels"
 def sanitize_owner(address: str) -> str:
     
     # SYMBOLS 
