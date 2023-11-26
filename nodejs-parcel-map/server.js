@@ -18,10 +18,10 @@ app.use(express.urlencoded({ extended: true }));
 const db = require("./app/models");
 db.sequelize.sync();
 
-// simple route
-app.get("/parcel/findone", (req, res) => {
-  res.json({ message: "Welcome to natewilliams2 application." });
-});
+// add routes
+require("./app/routes/parcel.routes")(app);
+console.log("routes: " + app.routes)
+
 
 // set port, listen for requests
 const PORT = process.env.PORT || 8080;
