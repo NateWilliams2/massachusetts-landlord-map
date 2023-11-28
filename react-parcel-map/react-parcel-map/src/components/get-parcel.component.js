@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import ParcelDataService from '../services/parcel.service'
-import Map from './map.component.js'
+import ParcelMap from './parcel-map.component.js'
 
 export default class GetParcel extends Component {
   constructor (props) {
@@ -129,7 +129,7 @@ export default class GetParcel extends Component {
           </div>
         )}
         <div>
-          <Map></Map>
+          <ParcelMap></ParcelMap>
         </div>
       </div>
     )
