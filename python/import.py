@@ -163,7 +163,7 @@ def get_lat_long(data_source: ogr.DataSource, sqldb: mysql.connector.MySQLConnec
         raise ValueError('no sql layer returned')
     featureCount = gc_layer.GetFeatureCount()
     if featureCount == 0:
-        print(f"retrieved no geometry for property {propID}")
+        # print(f"retrieved no geometry for property {propID}")
         return([None, None])
         
     for i in range(data_source.GetLayerCount()):
@@ -199,36 +199,45 @@ def get_lat_long(data_source: ogr.DataSource, sqldb: mysql.connector.MySQLConnec
     
     transform = osr.CoordinateTransformation(InSR, OutSR)
 
-    
-    boundaries = geom.Boundary()
-    if not(isinstance(boundaries, ogr.Geometry)): 
-        raise ValueError('no boundary returned')
-    # print(boundaries.GetGeometryName())
-    
-    xCoord = 0
-    yCoord = 0
-    for shape in range(boundaries.GetGeometryCount()):
-        polygon = boundaries.GetGeometryRef(shape)
-        # print(polygon.GetGeometryName())
-        # print(f'points: {polygon.GetPointCount()}')
-        for z in range(polygon.GetPointCount()):
-            point = polygon.GetPoint(z)
-            # point.AssignSpatialReference(InSR)    # tell the point what coordinates it's in
-            # point.TransformTo(OutSR)              # project it to the out spatial reference
-            
-            # xc = point.GetX() * 0.0174532925199433
-            # yc = point.GetY() * 0.0174532925199433
-            # print(f'transformed multiplied coordinates: {xc},{yc}') # output projected X and Y coordinates
-            # print(point)
-            xCoord += point[0]
-            yCoord += point[1]
-        xCoord = xCoord / polygon.GetPointCount()
-        yCoord = yCoord / polygon.GetPointCount()
-        # print(f'x: {xCoord}, y: {yCoord}')
-        # print('transformed coordinates: {0},{1}'.format(newPoint[0],newPoint[1])) # output projected X and Y coordinates
+    try: 
+        boundaries = geom.Boundary()
+        if not(isinstance(boundaries, ogr.Geometry)): 
+            raise ValueError('no boundary returned')
+        # print(boundaries.GetGeometryName())
         
-    newPoint = transform.TransformPoint(xCoord, yCoord)
-    return([newPoint[0], newPoint[1]])
+        xCoord = 0
+        yCoord = 0
+        for shape in range(boundaries.GetGeometryCount()):
+            polygon = boundaries.GetGeometryRef(shape)
+            # if polygon.GetGeometryName() != 'LINESTRING':
+            #     print(polygon.GetGeometryName())
+            # print(f'points: {polygon.GetPointCount()}')
+            # if polygon.GetGeometryName() == 'LINESTRING':
+            #     break
+            if polygon.GetGeometryName() == 'COMPOUNDCURVE':
+                polygon = polygon.GetLinearGeometry()
+            for z in range(polygon.GetPointCount()):
+                point = polygon.GetPoint(z)
+                # point.AssignSpatialReference(InSR)    # tell the point what coordinates it's in
+                # point.TransformTo(OutSR)              # project it to the out spatial reference
+                
+                # xc = point.GetX() * 0.0174532925199433
+                # yc = point.GetY() * 0.0174532925199433
+                # print(f'transformed multiplied coordinates: {xc},{yc}') # output projected X and Y coordinates
+                # print(point)
+                xCoord += point[0]
+                yCoord += point[1]
+            
+            xCoord = xCoord / polygon.GetPointCount()
+            yCoord = yCoord / polygon.GetPointCount()
+            # print(f'x: {xCoord}, y: {yCoord}')
+            # print('transformed coordinates: {0},{1}'.format(newPoint[0],newPoint[1])) # output projected X and Y coordinates
+            
+        newPoint = transform.TransformPoint(xCoord, yCoord)
+        return([newPoint[0], newPoint[1]])
+    except Exception as e:
+        print(f'exception getting parcel coordinates: {e}')
+        return([None, None])
     
 
 
@@ -239,8 +248,7 @@ data_source = get_parcels()
 
 
 
-# max_rows = 1000000
-max_rows = 500
+max_rows = 10000000
 insert_rows(data_source, sqldb, cursor, 10000, max_rows)
 
 
