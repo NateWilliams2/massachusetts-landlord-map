@@ -1,6 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState, createContext, useContext } from 'react'
 import ParcelDataService from '../services/parcel.service'
 import ParcelMap from './parcel-map.component.js'
+
+export const ParcelsContext = createContext()
 
 function getParcel (e, address, setParcels) {
   console.log(address)
@@ -23,7 +25,7 @@ export default function MapPage () {
   const [addrNumber, setAddrNumber] = useState()
   const [addrStreet, setAddrStreet] = useState()
   const [addrCity, setAddrCity] = useState()
-  const [parcels, setParcels] = useState([])
+  const [parcels, setParcels] = useState()
 
   return (
     <div className='submit-form'>
@@ -87,7 +89,9 @@ export default function MapPage () {
         </div>
       }
       <div>
-        <ParcelMap></ParcelMap>
+        <ParcelsContext.Provider value={[parcels, setParcels]}>
+          <ParcelMap></ParcelMap>
+        </ParcelsContext.Provider>
       </div>
     </div>
   )

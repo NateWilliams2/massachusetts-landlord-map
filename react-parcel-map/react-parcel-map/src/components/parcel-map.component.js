@@ -2,7 +2,7 @@ import 'react-leaflet'
 import 'leaflet-control-geocoder'
 import 'leaflet-control-geocoder/dist/Control.Geocoder.css'
 import 'leaflet-control-geocoder/dist/Control.Geocoder.js'
-import React, { useState } from 'react'
+import React, { useContext, useState } from 'react'
 import {
   MapContainer,
   TileLayer,
@@ -11,10 +11,14 @@ import {
   useMapEvents,
   useMap
 } from 'react-leaflet'
-import { Control } from 'leaflet'
+import { Control, LatLng, latLng } from 'leaflet'
+import { ParcelsContext } from './get-parcel.component'
+
 function LocationMarker () {
   const [position, setPosition] = useState(null)
   const [popupContent, setPopupContent] = useState('popup')
+  const [parcels, setParcels] = useContext(ParcelsContext)
+
   const map = useMap()
   const gc = Control.Geocoder.nominatim()
 
@@ -54,6 +58,33 @@ function LocationMarker () {
       }
     }
   })
+
+  if (parcels != null) {
+    if (parcels.Length != 0) {
+      var avgX = 0
+      var avgY = 0
+      const markers = []
+      for (const parcel of parcels) {
+        avgX = avgX + parcel.x_coord
+        avgY = avgY + parcel.y_coord
+        if (parcel.x_coord && parcel.y_coord) {
+          markers.push(
+            <Marker position={[parcel.x_coord, parcel.y_coord]}>
+              <Popup>{parcel.owner1}</Popup>
+            </Marker>
+          )
+        }
+      }
+      avgX = avgX / markers.length
+      avgY = avgY / markers.length
+
+      console.log('lat long: ', avgX, avgY)
+      const latLong = latLng(avgX, avgY)
+      map.flyTo(latLong, map.getZoom())
+
+      return markers
+    }
+  }
 
   return position === null ? null : (
     <Marker position={position}>

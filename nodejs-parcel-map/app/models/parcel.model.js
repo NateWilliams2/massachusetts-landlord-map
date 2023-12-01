@@ -110,6 +110,12 @@ module.exports = (sequelize, Sequelize) => {
     },
     town_id: {
       type: Sequelize.INTEGER
+    },
+    x_coord: {
+      type: Sequelize.FLOAT(20, 10)
+    },
+    y_coord: {
+      type: Sequelize.FLOAT(20, 10)
     }
   })
 
