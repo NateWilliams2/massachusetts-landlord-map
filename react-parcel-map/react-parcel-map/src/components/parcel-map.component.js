@@ -12,11 +12,64 @@ import {
   useMap
 } from 'react-leaflet'
 import { Control, LatLng, latLng } from 'leaflet'
+import ParcelDataService from '../services/parcel.service'
 import { ParcelsContext } from './get-parcel.component'
+
+function getChildParcels (e, owner, setChildParcels) {
+  console.log(owner)
+  ParcelDataService.findByOwner(owner)
+    .then(response => {
+      if (response.data.parcels.length == 0) {
+        // No parcels found
+        console.log('No parcels found')
+        return
+      }
+      console.log(response.data.parcels.length + ' parcels found')
+      setChildParcels(response.data.parcels)
+    })
+    .catch(e => {
+      console.log(e)
+    })
+}
+
+function createMarker (parcel, setChildParcels) {
+  return (
+    <Marker position={[parcel.x_coord, parcel.y_coord]}>
+      <Popup>
+        <div>
+          {parcel.site_addr}, {parcel.city}
+        </div>
+        <div>
+          Owned by {parcel.owner1} registered at {parcel.own_addr}{' '}
+          {parcel.own_city} {parcel.own_state}
+        </div>
+        <button
+          onClick={e => getChildParcels(e, parcel.owner1, setChildParcels)}
+          className='btn btn-success'
+        >
+          Show this owner's properties
+        </button>
+      </Popup>
+    </Marker>
+  )
+}
+
+function createChildMarker (parcel) {
+  return (
+    <Marker position={[parcel.x_coord, parcel.y_coord]}>
+      <Popup>
+        <div>
+          {parcel.site_addr}, {parcel.city}
+        </div>
+      </Popup>
+    </Marker>
+  )
+}
 
 function LocationMarker () {
   const [position, setPosition] = useState(null)
   const [popupContent, setPopupContent] = useState('popup')
+  const [childParcels, setChildParcels] = useState()
   const [parcels, setParcels] = useContext(ParcelsContext)
 
   const map = useMap()
@@ -59,31 +112,33 @@ function LocationMarker () {
     }
   })
 
-  if (parcels != null) {
-    if (parcels.Length != 0) {
-      var avgX = 0
-      var avgY = 0
-      const markers = []
-      for (const parcel of parcels) {
+  const markers = []
+  var avgX = 0
+  var avgY = 0
+  if (parcels != null && parcels.Length != 0) {
+    for (const parcel of parcels) {
+      avgX = avgX + parcel.x_coord
+      avgY = avgY + parcel.y_coord
+      if (parcel.x_coord && parcel.y_coord) {
+        markers.push(createMarker(parcel, setChildParcels))
+      }
+    }
+
+    if (childParcels != null && childParcels.Length != 0) {
+      for (const parcel of childParcels) {
         avgX = avgX + parcel.x_coord
         avgY = avgY + parcel.y_coord
         if (parcel.x_coord && parcel.y_coord) {
-          markers.push(
-            <Marker position={[parcel.x_coord, parcel.y_coord]}>
-              <Popup>{parcel.owner1}</Popup>
-            </Marker>
-          )
+          markers.push(createChildMarker(parcel))
         }
       }
-      avgX = avgX / markers.length
-      avgY = avgY / markers.length
-
-      console.log('lat long: ', avgX, avgY)
-      const latLong = latLng(avgX, avgY)
-      map.flyTo(latLong, map.getZoom())
-
-      return markers
     }
+    avgX = avgX / markers.length
+    avgY = avgY / markers.length
+    console.log('lat long: ', avgX, avgY)
+    const latLong = latLng(avgX, avgY)
+    map.flyTo(latLong, map.getZoom())
+    return markers
   }
 
   return position === null ? null : (
